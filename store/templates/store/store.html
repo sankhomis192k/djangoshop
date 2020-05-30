@@ -1,0 +1,126 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}	
+	<div class="row" id="cartRow">
+		{% for product in products %}
+		<div class="col-lg-4">
+			<img class="thumbnail" src="{{product.imageUrl}}">
+			<div class="box-element product">
+				<h6><strong>{{ product.name }}</strong></h6>
+				<hr>
+				<span id="divPr{{product.id}}" class="cartButtons">
+					<button 
+					data-product={{product.id}} 
+					data-action="add" 
+					class="btn btn-outline-secondary add-btn">
+						Add to Cart
+					</button>
+				</span>				
+				<a 
+				class="btn btn-outline-success"				
+				data-product={{product.id}} 
+				data-action="display"
+				>View</a>
+				<h4 style="display: inline-block; float: right">
+					<strong>
+						{{ product.price | floatformat:2}}
+					</strong>
+				</h4>
+			</div>
+		</div>		
+		{% endfor %}
+	</div>
+	<!--<form action="" method="post">
+			{% csrf_token %}
+			<input type="text">
+	</form>-->
+
+{% endblock content %}
+{% block js %}
+<script type="text/javascript">
+
+	if(cookieCart !== null){
+		updateCart(cookieCart);
+	}
+
+	var cartRow = document.querySelector("#cartRow");
+	cartRow.addEventListener("click",manageCart);
+	
+	function manageCart(e){
+		e.preventDefault();	
+
+		let productId = e.target.getAttribute("data-product");
+		let action = e.target.getAttribute("data-action");
+		
+		if(action === "add"){
+			console.log("Add");	
+			addToCart(productId);			
+		}		
+		else if(action ==="display"){
+			window.location.href = "/displayProduct/"+productId
+		}
+	}
+
+	function addToCart(productId){
+		console.log(cookieCart[productId]);
+		if(cookieCart[productId] === undefined){			
+			cookieCart[productId] = { "quantity": 1 }
+			let total_items = parseInt(document.querySelector("#cart-total").innerText);
+			total_items += 1;
+			document.querySelector("#cart-total").innerText = total_items;
+			document.cookie = "cookieCart="+JSON.stringify(cookieCart)+";domain=;path=/";
+			updateCart(cookieCart);
+		}
+	}
+
+	function updateCart(cart){
+		for(item in cart){
+			let str= "<button class='btn btn-primary' onclick='increaseItem(event,"+item+")'>";
+			str += "+";
+			str += "</button>";
+			str += "<span class='mx-2' id='item"+item+"'>"+cookieCart[item]['quantity']+"</span>"
+			str += "<button class='btn btn-primary' onclick='decreaseItem(event,"+item+")'>";
+			str += "-";
+			str += "</button>";
+			if(document.querySelector("#divPr"+item)){
+				document.querySelector("#divPr"+item).innerHTML = str;
+			}	
+		}		
+	}
+
+	function increaseItem(e,productId){		
+		e.stopPropagation();
+		cookieCart[productId]['quantity'] += 1;
+		e.target.nextElementSibling.innerText = cookieCart[productId]['quantity'];
+		let total_items = parseInt(document.querySelector("#cart-total").innerText);
+		total_items += 1;
+		document.querySelector("#cart-total").innerText = total_items;
+		document.cookie = "cookieCart="+JSON.stringify(cookieCart)+";domain=;path=/";
+	}
+
+	function decreaseItem(e,productId){
+		e.stopPropagation();
+		cookieCart[productId]['quantity'] -= 1;
+
+		if(cookieCart[productId]['quantity'] == 0){
+			delete cookieCart[productId];
+			let str = "<button 	data-product='"+productId+"' data-action='add'"; 
+			str += " class='btn btn-outline-secondary add-btn'>";
+			str += "Add to Cart";
+			str += "</button>";
+			document.querySelector("#divPr"+item).innerHTML=str;						
+		}
+		else {
+			let total_items = parseInt(document.querySelector("#cart-total").innerText);
+			total_items -= 1;
+			document.querySelector("#cart-total").innerText = total_items;
+			e.target.previousElementSibling.innerText = cookieCart[productId]['quantity'];
+		}
+
+		document.cookie = "cookieCart="+JSON.stringify(cookieCart)+";domain=;path=/";
+	}
+
+
+	
+</script>
+{% endblock %}
