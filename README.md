@@ -1,0 +1,2 @@
+# djangoshop
+Django online shop 
